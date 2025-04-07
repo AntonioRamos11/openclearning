@@ -15,16 +15,31 @@ use ocl::{ProQue, Result};
 //nob leasson
 //3080 has 84 sms , ga102 , 10752 shader units
 // 4090 has 144 sms ,3
+//g104m has 40sms , 5120 shader units  ,128 threads per block
 //on Nvidia cores are SM cores ,streaming multiprocessors ,AMD are CU cores compute units
 
+//Gpus has warps , warps are groups threads moderm gpus has warps of 32 threads
 
+//SIMD are single instruction multiple data , 32 threads in a warp execute the same instruction at the same time
+//vector register 
+// float <32> 1024 bits
+// c=a+b on vector register, this is a single instruction on 32 pieces of data
+
+//SIMT single instruction multiple thread
+//  similar to SIMD but threads are not in lockstep, but load/stores are difreerent
+//  load stores are implicict scater gather , delcare- where simds its explicit
+//  you only declare float but  behind the scenes its a float32
 //100000000000
 fn main() -> Result<()> {
     // Define the size of our data
     let data_size = 128;
     
     let kernel_src = r#"kernel void add (global float *c) {
-        c[get_global_id(0)] = get_local_id(0); 
+        int a = get_local_id(0);
+        for (int i = 0; i < 100000; i++) {
+                a+=i;
+         }
+        c[get_global_id(0)] = a;
     }"#;
     
     // Add dimensions to the ProQue builder
@@ -51,13 +66,19 @@ fn main() -> Result<()> {
         //.arg(&a_buf)
         //.arg(&b_buf)
 
+
+    use std::time::Instant;
+    let start = Instant::now();
+        
     unsafe {
         kernel.cmd()
             .global_work_size(a_buf.len())
-            .local_work_size(4)
+            .local_work_size(32)
             .enq()?;
     }
-    
+    let elapsed = start.elapsed();
+    println!("Kernel execution time: {:?}", elapsed);
+  
     let mut c_data = vec![0.0f32; data_size];
     c_buf.cmd().read(&mut c_data).enq()?;
 
