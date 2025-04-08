@@ -9,3 +9,4 @@ description = "A simple command-line tool"
 clap = { version = "4.4", features = ["derive"] }
 anyhow = "1.0"
 ocl = "0.19"
+plotters = "0.3"
