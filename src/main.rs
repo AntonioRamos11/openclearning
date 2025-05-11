@@ -161,7 +161,7 @@ fn main() -> Result<()> {
     chart.configure_mesh()
         .x_desc("Number of Threads")
         .y_desc("Execution Time (ns)")
-        .dr0aw()
+        .draw()
         .expect("Failed to draw mesh");
     
     // Draw each series with different color
